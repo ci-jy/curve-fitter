@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Neural Network Curve Fitter
+
+Fit a neural network to any (x, y) dataset — entirely in your browser. No backend, no data leaves your machine.
+
+## Features
+
+- **CSV upload or manual paste** — drag-and-drop a `.csv` with `x,y` columns, or type/paste pairs directly
+- **Configurable architecture** — set the number of hidden layers (1–6), neurons per layer, activation function, optimizer, learning rate, and epoch count
+- **Live training** — watch the fitted curve update and the loss chart animate in real time as the network trains
+- **Stop / retrain** — halt training at any point and retrain with new settings
+- **Export** — download the trained model as TensorFlow.js JSON + weights, or download the predicted curve as a CSV
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | shadcn/ui + Tailwind CSS v4 |
+| ML | TensorFlow.js (in-browser) |
+| Charts | Recharts |
+| CSV parsing | PapaParse |
 
 ## Getting Started
 
-First, run the development server:
+**Prerequisites:** Node.js (installed via nvm below, or bring your own ≥18).
 
 ```bash
+# 1. Install nvm + Node if you don't have them
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+source ~/.bashrc
+nvm install --lts
+
+# 2. Clone and install
+git clone https://github.com/ci-jy/curve-fitter.git
+cd curve-fitter
+npm install
+
+# 3. Run
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Load data** — upload a CSV (`x,y` column headers) or paste `x, y` pairs (one per line) into the Paste tab and click **Apply**.
+2. **Configure the network** — adjust layers, neurons, activation function, optimizer, learning rate, and epoch count in the Network Architecture panel.
+3. **Train** — click **Start Training**. The fitted curve and loss chart update live each epoch.
+4. **Export** — once training finishes, download the model weights or the predicted curve CSV from the Export panel.
 
-## Learn More
+### CSV format
 
-To learn more about Next.js, take a look at the following resources:
+```
+x,y
+0,0
+1,1.1
+2,3.9
+3,9.2
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Column names are case-insensitive. Extra columns are ignored.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+app/
+  page.tsx          — main layout, shared state
+  layout.tsx        — root layout + dark mode wiring
+  globals.css       — shadcn CSS variables (preset buG04wc)
+components/
+  DataInputPanel    — CSV upload + paste tabs
+  NetworkConfig     — architecture sliders and selects
+  TrainingPanel     — start/stop, progress bar, live loss display
+  FitChart          — scatter plot + fitted curve overlay
+  LossChart         — epoch vs. loss line chart
+  ExportPanel       — model + predictions download
+lib/
+  nn.ts             — TensorFlow.js model builder, trainer, predictor
+  data.ts           — CSV / manual parsing, min-max normalisation
+  types.ts          — shared TypeScript types
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
