@@ -13,6 +13,15 @@ import {
 } from "recharts"
 import type { DataPoint } from "@/lib/types"
 
+const COLORS = {
+  grid: "#e5e7eb",
+  axis: "#6b7280",
+  dots: "#2563eb",
+  curve: "#dc2626",
+  tooltipBg: "#ffffff",
+  tooltipBorder: "#e5e7eb",
+}
+
 interface Props {
   data: DataPoint[]
   curve: DataPoint[]
@@ -30,14 +39,14 @@ export default function FitChart({ data, curve }: Props) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
         <XAxis
           dataKey="x"
           type="number"
           name="x"
           domain={["auto", "auto"]}
           tick={{ fontSize: 11 }}
-          stroke="hsl(var(--muted-foreground))"
+          stroke={COLORS.axis}
         />
         <YAxis
           dataKey="y"
@@ -45,14 +54,14 @@ export default function FitChart({ data, curve }: Props) {
           name="y"
           domain={["auto", "auto"]}
           tick={{ fontSize: 11 }}
-          stroke="hsl(var(--muted-foreground))"
-          width={48}
+          stroke={COLORS.axis}
+          width={56}
         />
         <Tooltip
           contentStyle={{
-            background: "hsl(var(--popover))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: 8,
+            background: COLORS.tooltipBg,
+            border: `1px solid ${COLORS.tooltipBorder}`,
+            borderRadius: 4,
             fontSize: 12,
           }}
           formatter={(v) => (typeof v === "number" ? v.toFixed(4) : v)}
@@ -61,8 +70,9 @@ export default function FitChart({ data, curve }: Props) {
         <Scatter
           name="Data"
           data={data}
-          fill="hsl(var(--primary))"
-          opacity={0.8}
+          fill={COLORS.dots}
+          opacity={0.75}
+          r={4}
         />
         {curve.length > 0 && (
           <Line
@@ -70,7 +80,7 @@ export default function FitChart({ data, curve }: Props) {
             data={curve}
             dataKey="y"
             dot={false}
-            stroke="hsl(var(--destructive))"
+            stroke={COLORS.curve}
             strokeWidth={2}
             type="monotone"
             isAnimationActive={false}
