@@ -3,7 +3,6 @@
 import { useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
 import { buildModel, trainModel, predict } from "@/lib/nn"
 import { computeNormParams } from "@/lib/data"
 import type { DataPoint, TrainingConfig, TrainingState } from "@/lib/types"
@@ -48,11 +47,7 @@ export default function TrainingPanel({
       lossHistory: [],
     })
 
-    await trainModel(
-      model,
-      data,
-      normParams,
-      config,
+    await trainModel(model, data, normParams, config,
       async (epoch, loss) => {
         const curve = await predict(model, normParams)
         onCurveUpdate(curve)
@@ -72,56 +67,33 @@ export default function TrainingPanel({
     }))
   }
 
-  function handleStop() {
-    stopRef.current = true
-  }
-
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        {!isTraining ? (
-          <Button
-            onClick={handleStart}
-            disabled={data.length < 2}
-            className="flex-1"
-          >
-            {trainingState.status === "idle" ? "Start Training" : "Retrain"}
-          </Button>
-        ) : (
-          <Button
-            onClick={handleStop}
-            variant="destructive"
-            className="flex-1"
-          >
-            Stop
-          </Button>
-        )}
+      {isTraining ? (
+        <Button onClick={() => { stopRef.current = true }} variant="destructive" className="w-full h-8 text-xs">
+          Stop
+        </Button>
+      ) : (
+        <Button onClick={handleStart} disabled={data.length < 2} className="w-full h-8 text-xs">
+          {trainingState.status === "idle" ? "Start Training" : "Retrain"}
+        </Button>
+      )}
 
-        <StatusBadge status={trainingState.status} />
-      </div>
+      {data.length < 2 && trainingState.status === "idle" && (
+        <p className="text-[10px] text-muted-foreground text-center">Load a dataset to begin</p>
+      )}
 
       {trainingState.totalEpochs > 0 && (
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="space-y-2">
+          <Progress value={pct} className="h-1" />
+          <div className="flex justify-between text-[10px] tabular-nums text-muted-foreground">
             <span>Epoch {trainingState.epoch} / {trainingState.totalEpochs}</span>
             {trainingState.loss !== null && (
-              <span>Loss: {trainingState.loss.toExponential(3)}</span>
+              <span>Loss {trainingState.loss.toExponential(3)}</span>
             )}
           </div>
-          <Progress value={pct} />
         </div>
       )}
     </div>
   )
-}
-
-function StatusBadge({ status }: { status: TrainingState["status"] }) {
-  const map: Record<TrainingState["status"], { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    idle: { label: "Idle", variant: "secondary" },
-    training: { label: "Training…", variant: "default" },
-    stopped: { label: "Stopped", variant: "destructive" },
-    done: { label: "Done", variant: "outline" },
-  }
-  const { label, variant } = map[status]
-  return <Badge variant={variant}>{label}</Badge>
 }

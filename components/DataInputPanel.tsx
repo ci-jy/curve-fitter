@@ -4,7 +4,6 @@ import { useRef, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { parseCsv, parseManual } from "@/lib/data"
 import type { DataPoint } from "@/lib/types"
 
@@ -14,8 +13,7 @@ interface Props {
 
 export default function DataInputPanel({ onDataChange }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [csvName, setCsvName] = useState<string | null>(null)
-  const [csvCount, setCsvCount] = useState<number | null>(null)
+  const [csvInfo, setCsvInfo] = useState<{ name: string; count: number } | null>(null)
   const [pasteText, setPasteText] = useState("")
   const [pasteCount, setPasteCount] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -25,19 +23,18 @@ export default function DataInputPanel({ onDataChange }: Props) {
     setError(null)
     try {
       const points = await parseCsv(file)
-      setCsvName(file.name)
-      setCsvCount(points.length)
+      setCsvInfo({ name: file.name, count: points.length })
       onDataChange(points)
     } catch (e) {
       setError((e as Error).message)
     }
   }
 
-  function handlePasteCommit(text: string) {
+  function handlePasteCommit() {
     setError(null)
-    if (!text.trim()) return
+    if (!pasteText.trim()) return
     try {
-      const points = parseManual(text)
+      const points = parseManual(pasteText)
       setPasteCount(points.length)
       onDataChange(points)
     } catch (e) {
@@ -46,21 +43,15 @@ export default function DataInputPanel({ onDataChange }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3 text-sm">
       <Tabs defaultValue="csv">
         <TabsList className="w-full">
-          <TabsTrigger value="csv" className="flex-1">Upload CSV</TabsTrigger>
-          <TabsTrigger value="paste" className="flex-1">Paste Data</TabsTrigger>
+          <TabsTrigger value="csv" className="flex-1 text-xs">CSV Upload</TabsTrigger>
+          <TabsTrigger value="paste" className="flex-1 text-xs">Paste</TabsTrigger>
         </TabsList>
 
         <TabsContent value="csv" className="mt-3">
           <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            }`}
-            onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={(e) => {
@@ -69,57 +60,56 @@ export default function DataInputPanel({ onDataChange }: Props) {
               const file = e.dataTransfer.files[0]
               if (file) handleFile(file)
             }}
+            onClick={() => fileInputRef.current?.click()}
+            className={`
+              border border-dashed cursor-pointer transition-colors
+              flex flex-col items-center justify-center gap-1 py-5 px-3 text-center
+              ${isDragging ? "border-foreground bg-muted" : "border-border hover:border-foreground/40"}
+            `}
           >
             <input
               ref={fileInputRef}
               type="file"
               accept=".csv,text/csv"
               className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handleFile(file)
-              }}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
             />
-            <p className="text-sm text-muted-foreground">
-              Drop a CSV file here, or <span className="text-primary underline">browse</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              File must have <code>x</code> and <code>y</code> columns
-            </p>
-            {csvName && (
-              <div className="mt-2 flex items-center justify-center gap-2">
-                <Badge variant="secondary">{csvName}</Badge>
-                <Badge>{csvCount} points</Badge>
-              </div>
+            {csvInfo ? (
+              <>
+                <span className="font-medium text-foreground truncate max-w-full">{csvInfo.name}</span>
+                <span className="text-xs text-muted-foreground">{csvInfo.count} points loaded</span>
+              </>
+            ) : (
+              <>
+                <span className="text-muted-foreground text-xs">Drop .csv or click to browse</span>
+                <span className="text-[10px] text-muted-foreground/60">Needs x and y columns</span>
+              </>
             )}
           </div>
         </TabsContent>
 
         <TabsContent value="paste" className="mt-3 space-y-2">
           <Textarea
-            placeholder={"1, 2.3\n2, 4.1\n3, 8.7\n..."}
-            className="font-mono text-sm h-40 resize-none"
+            placeholder={"0, 0\n1, 1.1\n2, 3.9\n3, 9.2"}
+            className="font-mono text-xs h-32 resize-none"
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
           />
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => handlePasteCommit(pasteText)}
-            >
+          <div className="flex items-center justify-between">
+            <Button size="sm" variant="secondary" className="text-xs h-7" onClick={handlePasteCommit}>
               Apply
             </Button>
-            {pasteCount !== null && <Badge>{pasteCount} points loaded</Badge>}
+            {pasteCount !== null && (
+              <span className="text-xs text-muted-foreground">{pasteCount} points</span>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            One <code>x, y</code> pair per line. Spaces, commas, or semicolons as separators.
-          </p>
         </TabsContent>
       </Tabs>
 
       {error && (
-        <p className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1">{error}</p>
+        <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 px-2 py-1.5">
+          {error}
+        </p>
       )}
     </div>
   )

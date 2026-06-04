@@ -28,22 +28,22 @@ export default function ExportPanel({ modelRef, curve, disabled }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="space-y-2">
       <Button
         variant="outline"
-        size="sm"
+        className="w-full h-8 text-xs justify-start"
         disabled={disabled}
         onClick={handleDownloadModel}
       >
-        Download model (JSON + weights)
+        Download model weights
       </Button>
       <Button
         variant="outline"
-        size="sm"
+        className="w-full h-8 text-xs justify-start"
         disabled={disabled || curve.length === 0}
         onClick={handleDownloadPredictions}
       >
-        Download predictions (CSV)
+        Download predictions CSV
       </Button>
     </div>
   )
